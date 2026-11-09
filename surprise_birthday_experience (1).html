@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ada Pesan Spesial Untukmu ✨</title>
+    
+    <!-- Google Fonts: Playfair Display & Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================
+           GLOBAL & VARIABLES
+           ========================================= */
+        :root {
+            --rose-gold: #b76e79;
+            --rose-gold-light: #e0a9b2;
+            --soft-pink: #fadadd;
+            --cream: #fffdd0;
+            --white: #ffffff;
+            --text-dark: #4a4a4a;
+            --gold: #d4af37;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100dvh; /* Mobile friendly full height */
+            overflow: hidden; /* No scroll ever */
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fff5f7 0%, var(--soft-pink) 100%);
+            color: var(--text-dark);
+            position: relative;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Ambient floating particles */
+        .ambient-particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            20% { opacity: 1; transform: translateY(80vh) scale(1); }
+            80% { opacity: 1; }
+            100% { transform: translateY(-20vh) scale(0); opacity: 0; }
+        }
+
+        /* Balloons Animation */
+        .balloon {
+            position: absolute;
+            bottom: -150px;
+            width: 60px;
+            height: 75px;
+            background: var(--rose-gold);
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1);
+            animation: flyUp 6s ease-in forwards;
+            opacity: 0.9;
+            z-index: 5;
+        }
+        .balloon::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 8px solid var(--rose-gold);
+        }
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            width: 1px;
+            height: 50px;
+            background: rgba(0,0,0,0.2);
+        }
+        @keyframes flyUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.9; }
+            100% { transform: translateY(-120vh) rotate(15deg); opacity: 0; }
+        }
+
+        /* =========================================
+           STAGE MANAGEMENT
+           ========================================= */
+        .stage {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 1.2s ease-in-out, transform 1.2s ease-in-out;
+            transform: scale(0.95);
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .stage.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--rose-gold), #d18d97);
+            color: var(--white);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            box-shadow: 0 8px 20px rgba(183, 110, 121, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+        .btn-primary.large {
+            padding: 18px 36px;
+            font-size: 1.2rem;
+            animation: pulse-button 2s infinite;
+        }
+        @keyframes pulse-button {
+            0% { box-shadow: 0 0 0 0 rgba(183, 110, 121, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(183, 110, 121, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(183, 110, 121, 0); }
+        }
+
+        /* =========================================
+           STAGE 0: GRAND ENTRANCE
+           ========================================= */
+        #stage0 .welcome-text {
+            font-size: 2.5rem;
+            color: var(--rose-gold);
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+            opacity: 0;
+            animation: fade-in-up 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* =========================================
+           STAGE 1: ENVELOPE
+           ========================================= */
+        .envelope-container {
+            position: relative;
+            cursor: pointer;
+            width: 180px;
+            height: 120px;
+            animation: pulse-envelope 2s infinite ease-in-out;
+            perspective: 1000px;
+        }
+        .envelope-container.open {
+            animation: none;
+        }
+        .envelope {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #d18d97, var(--rose-gold));
+            border-radius: 8px;
+            box-shadow: 0 15px 30px rgba(183, 110, 121, 0.3);
+        }
+        .flap {
+            position: absolute;
+            top: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 90px solid transparent;
+            border-right: 90px solid transparent;
+            border-top: 65px solid var(--rose-gold-light);
+            transform-origin: top;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 4;
+        }
+        .envelope-container.open .flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+        .pocket {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 90px solid rgba(255,255,255,0.1);
+            border-right: 90px solid rgba(255,255,255,0.1);
+            border-bottom: 60px solid rgba(255,255,255,0.3);
+            border-radius: 0 0 8px 8px;
+            z-index: 3;
+            pointer-events: none;
+        }
+        .paper {
+            position: absolute;
+            top: 5px; left: 10px; right: 10px; bottom: 10px;
+            background: var(--white);
+            border-radius: 5px;
+            z-index: 2;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+        }
+        .envelope-container.open .paper {
+            transform: translateY(-80px);
+        }
+        .envelope-seal {
+            position: absolute;
+            top: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: #8e4a53;
+            border-radius: 50%;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: opacity 0.3s;
+        }
+        .envelope-container.open .envelope-seal {
+            opacity: 0;
+        }
+        .envelope-seal::after {
+            content: '❤';
+            color: var(--white);
+            font-size: 16px;
+        }
+
+        .stage-1-text {
+            margin-top: 40px;
+            color: var(--rose-gold);
+            font-size: 1.8rem;
+            font-style: italic;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        .tap-hint {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #888;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: fadeInOut 2s infinite;
+        }
+
+        /* =========================================
+           STAGE 2: THE MESSAGE
+           ========================================= */
+        .message-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 2.5rem 1.5rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 15px 35px rgba(183, 110, 121, 0.15);
+            text-align: center;
+        }
+        .message-card h1 {
+            color: var(--rose-gold);
+            font-size: 2rem;
+            margin-bottom: 15px;
+            line-height: 1.3;
+        }
+        .message-card p {
+            color: var(--text-dark);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        /* =========================================
+           STAGE 3: CAKE & MIC
+           ========================================= */
+        .cake-wrapper {
+            position: relative;
+            margin-top: 20px;
+            margin-bottom: 50px;
+            transform: scale(1);
+        }
+        
+        .cake {
+            position: relative;
+            width: 240px;
+            height: 150px;
+        }
+        .tier {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(183, 110, 121, 0.2);
+        }
+        .tier-bottom {
+            bottom: 0;
+            width: 240px;
+            height: 80px;
+            background: linear-gradient(to right, #f8c8d1, #fbdbe0);
+            border-bottom: 6px solid #e0a9b2;
+        }
+        .tier-top {
+            bottom: 80px;
+            width: 170px;
+            height: 70px;
+            background: var(--cream);
+            border-bottom: 4px solid #f8c8d1;
+        }
+        .drip {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 25px;
+            background: var(--white);
+            border-radius: 10px 10px 15px 15px;
+        }
+        
+        .candle {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 50px;
+            background: repeating-linear-gradient(45deg, var(--white), var(--white) 5px, var(--rose-gold-light) 5px, var(--rose-gold-light) 10px);
+            border-radius: 4px;
+            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .flame {
+            position: absolute;
+            top: -32px;
+            left: -3px;
+            width: 20px;
+            height: 32px;
+            background: radial-gradient(ellipse at bottom, #fff 0%, #ffde59 30%, #ff914d 70%, transparent 100%);
+            border-radius: 50% 50% 35% 35%;
+            filter: drop-shadow(0 0 15px #ff914d) drop-shadow(0 0 30px #ffde59);
+            transform-origin: center bottom;
+            animation: flicker 0.4s infinite alternate ease-in-out;
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        
+        @keyframes flicker {
+            0% { transform: scale(1) rotate(-2deg); opacity: 0.9; }
+            100% { transform: scale(1.1) rotate(2deg); opacity: 1; filter: drop-shadow(0 0 20px #ff914d) drop-shadow(0 0 40px #ffde59); }
+        }
+
+        .smoke {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 10px;
+            background: rgba(200, 200, 200, 0);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .smoke.active {
+            animation: riseSmoke 2s ease-out forwards;
+        }
+        @keyframes riseSmoke {
+            0% { background: rgba(200, 200, 200, 0.8); transform: translateX(-50%) translateY(0) scale(1); }
+            100% { background: rgba(200, 200, 200, 0); transform: translateX(-60%) translateY(-60px) scale(4); filter: blur(4px); }
+        }
+
+        .wish-text {
+            font-size: 1.8rem;
+            color: var(--rose-gold);
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 0px var(--white);
+        }
+
+        .btn-fallback {
+            background: transparent;
+            color: #999;
+            border: 1px solid #ccc;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        
+        .mic-status {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #2e8b57;
+            font-weight: 500;
+            display: none; 
+            animation: pulse-envelope 1.5s infinite;
+        }
+
+        /* =========================================
+           STAGE 4: SCRATCH CARD
+           ========================================= */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 2.5rem 1.5rem;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 15px 35px rgba(183, 110, 121, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .glass-card h1 {
+            font-size: 2.2rem;
+            color: var(--rose-gold);
+            line-height: 1.1;
+            margin-bottom: 10px;
+        }
+
+        .glass-card p {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        /* Scratch Card */
+        .scratch-wrapper {
+            position: relative;
+            width: 100%;
+            height: 130px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1), 0 5px 20px rgba(212, 175, 55, 0.4);
+            border: 2px solid var(--white);
+        }
+        
+        .scratch-prize {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #fff9e6, #ffecb3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            z-index: 1;
+            text-align: center;
+        }
+        
+        .scratch-prize h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #8a6d1c;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        
+        .scratch-prize .prize-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--rose-gold);
+            font-weight: 700;
+            line-height: 1.2;
+            padding: 10px;
+        }
+
+        canvas#scratchpad {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            cursor: pointer;
+            touch-action: none; 
+        }
+
+        .scratch-hint {
+            font-size: 0.8rem;
+            color: var(--rose-gold);
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        #balloons-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 4;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+        <source src="https://assets.mixkit.co/music/preview/mixkit-romantic-piano-and-strings-108.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Ambient Particles Generator -->
+    <div id="particles" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
+    <div id="balloons-container"></div>
+
+    <!-- ==========================================
+         STAGE 0: GRAND ENTRANCE (NEW)
+         ========================================== -->
+    <div id="stage0" class="stage active">
+        <h1 class="welcome-text">Nel ✨</h1>
+        <button class="btn-primary large" onclick="startGrandEntrance()">
+            <i class="fa-solid fa-gift"></i> Ada Kado Buat Kamu, Nel
+        </button>
+    </div>
+
+    <!-- ==========================================
+         STAGE 1: ENVELOPE
+         ========================================== -->
+    <div id="stage1" class="stage">
+        <div class="envelope-container" id="env-container" onclick="openEnvelope()">
+            <div class="envelope">
+                <div class="paper" id="env-paper"></div>
+                <div class="flap" id="env-flap"></div>
+                <div class="pocket"></div>
+                <div class="envelope-seal" id="env-seal"></div>
+            </div>
+        </div>
+        <h2 class="stage-1-text">Ada surat untukmu...</h2>
+        <p class="tap-hint">Ketuk amplopnya</p>
+    </div>
+
+    <!-- ==========================================
+         STAGE 2: THE MESSAGE
+         ========================================== -->
+    <div id="stage2" class="stage">
+        <div class="message-card">
+            <p style="text-align: left;">halo Nel, selamat ulang tahun yang ke 14🥳🥳semoga panjang umur, gak pernah kena masalah di perjalanan hidupnya, makasih dah mau jadi temanku dari SD, May all your birthday wishes come true!<br><br>-Rafa</p>
+            <button class="btn-primary" onclick="switchStage('stage2', 'stage3')">
+                Lanjut Tiup Lilin <i class="fa-solid fa-cake-candles"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         STAGE 3: WISH & MIC
+         ========================================== -->
+    <div id="stage3" class="stage">
+        <h2 class="wish-text">Make a wish!</h2>
+        <p style="font-size: 1rem; color: #666; margin-bottom: 25px;">Tutup mata, ucapkan harapanmu,<br>lalu tiup lilinnya dari HP-mu.</p>
+        
+        <div class="cake-wrapper">
+            <div class="cake">
+                <div class="tier tier-bottom"></div>
+                <div class="tier tier-top"><div class="drip"></div></div>
+                <div class="candle">
+                    <div id="flame" class="flame"></div>
+                    <div id="smoke" class="smoke"></div>
+                </div>
+            </div>
+        </div>
+
+        <button id="mic-btn" class="btn-primary" onclick="startMic()">
+            <i class="fa-solid fa-microphone"></i> Nyalakan Sensor Tiup
+        </button>
+        <div id="mic-status" class="mic-status"><i class="fa-solid fa-wind"></i> Sensor Aktif! Dekatkan hp dan tiup 💨</div>
+
+        <button class="btn-fallback" onclick="blowOutCandle()">
+            Lilinnya susah mati? Pencet ini aja
+        </button>
+    </div>
+
+    <!-- ==========================================
+         STAGE 4: SURPRISE & SCRATCH
+         ========================================== -->
+    <div id="stage4" class="stage">
+        <div class="glass-card">
+            <h1>Kejutan! 🎁</h1>
+            <p>gosok dulu kalo mau hadiah</p>
+            
+            <div class="scratch-wrapper">
+                <div class="scratch-prize">
+                    <div class="prize-text">voucher minta bayarin ke aku(RAFA)</div>
+                </div>
+                <canvas id="scratchpad"></canvas>
+            </div>
+            <div class="scratch-hint">✨ Gosok tiket emas di atas dengan jarimu ✨</div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         JAVASCRIPT LOGIC
+         ========================================== -->
+    <script>
+        /* --- Ambient Particles --- */
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for(let i=0; i<20; i++) {
+                let div = document.createElement('div');
+                div.className = 'ambient-particle';
+                let size = Math.random() * 8 + 4; 
+                div.style.width = size + 'px';
+                div.style.height = size + 'px';
+                div.style.left = Math.random() * 100 + 'vw';
+                div.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                div.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(div);
+            }
+        }
+        createParticles();
+
+        /* --- Balloons Animation --- */
+        function spawnBalloons() {
+            const container = document.getElementById('balloons-container');
+            const colors = ['#b76e79', '#e0a9b2', '#fadadd', '#d4af37'];
+            
+            for(let i=0; i<15; i++) {
+                setTimeout(() => {
+                    let balloon = document.createElement('div');
+                    balloon.className = 'balloon';
+                    balloon.style.left = Math.random() * 80 + 10 + 'vw';
+                    balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    
+                    // Adjust pseudo elements color based on parent (a bit tricky inline, so let's stick to default rose gold for some or override if needed)
+                    if(balloon.style.backgroundColor !== 'rgb(183, 110, 121)') { // not primary rose gold
+                         // Keep it simple for inline
+                    }
+                    
+                    container.appendChild(balloon);
+                    
+                    // Cleanup
+                    setTimeout(() => balloon.remove(), 6000);
+                }, i * 200); // staggered spawning
+            }
+        }
+
+        /* --- Grand Entrance Logic --- */
+        function startGrandEntrance() {
+            // 1. Play Music
+            const bgMusic = document.getElementById('bg-music');
+            if(bgMusic) {
+                bgMusic.volume = 0.5;
+                bgMusic.play().catch(e => console.log("Autoplay diizinkan setelah interaksi pengguna."));
+            }
+
+            // 2. MASSIVE Confetti Explosion
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 15,
+                    angle: 60,
+                    spread: 80,
+                    origin: { x: 0, y: 0.8 },
+                    colors: ['#b76e79', '#fadadd', '#d4af37', '#ffffff']
+                });
+                confetti({
+                    particleCount: 15,
+                    angle: 120,
+                    spread: 80,
+                    origin: { x: 1, y: 0.8 },
+                    colors: ['#b76e79', '#fadadd', '#d4af37', '#ffffff']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            // Tembakan ekstra dari tengah
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#b76e79', '#fadadd', '#d4af37', '#ffffff']
+            });
+
+            // 3. Spawn Flying Balloons
+            spawnBalloons();
+
+            // 4. Switch to Stage 1 (Envelope)
+            setTimeout(() => {
+                switchStage('stage0', 'stage1');
+            }, 2500); // Beri waktu menikmati ledakan awal
+        }
+
+        /* --- Stage Management --- */
+        function switchStage(hideId, showId) {
+            document.getElementById(hideId).classList.remove('active');
+            setTimeout(() => {
+                const nextStage = document.getElementById(showId);
+                nextStage.classList.add('active');
+                
+                // Initialize specific stage features
+                if(showId === 'stage4') {
+                    triggerConfettiSmall(); // Tembakan kecil saat hadiah terbuka
+                    initScratchCard();
+                }
+            }, 1200); // Wait for fade out
+        }
+
+        /* --- Envelope Animation Logic --- */
+        function openEnvelope() {
+            const env = document.getElementById('env-container');
+            if(env.classList.contains('open')) return;
+            
+            // Putar animasi membuka penutup amplop & menarik kertas
+            env.classList.add('open');
+            
+            // Pindah ke Stage 2 setelah animasi selesai (1.5 detik)
+            setTimeout(() => {
+                switchStage('stage1', 'stage2');
+            }, 1500); 
+        }
+
+        /* --- MIC & BLOW LOGIC (Stage 3) --- */
+        let audioContext;
+        let analyser;
+        let microphone;
+        let micStream;
+        let isBlown = false;
+        let reqAnimFrame;
+
+        async function startMic() {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+                
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                
+                microphone = audioContext.createMediaStreamSource(micStream);
+                microphone.connect(analyser);
+
+                // UI Update
+                document.getElementById('mic-btn').style.display = 'none';
+                document.getElementById('mic-status').style.display = 'block';
+
+                detectBlow();
+            } catch (err) {
+                alert("Yah, izin mic ditolak atau tidak didukung perangkat ini. Pakai tombol darurat di bawah aja ya cantikk! 😊");
+            }
+        }
+
+        function detectBlow() {
+            if (isBlown) return;
+            reqAnimFrame = requestAnimationFrame(detectBlow);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+            
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                sum += dataArray[i];
+            }
+            let average = sum / bufferLength;
+
+            // Threshold tiupan (40-60 biasanya ideal)
+            if (average > 45) { 
+                blowOutCandle();
+            }
+        }
+
+        function blowOutCandle() {
+            if(isBlown) return;
+            isBlown = true;
+            
+            // Hentikan mic processing
+            if(reqAnimFrame) cancelAnimationFrame(reqAnimFrame);
+            if(micStream) micStream.getTracks().forEach(t => t.stop());
+
+            // Animasi Mati Lilin
+            const flame = document.getElementById('flame');
+            const smoke = document.getElementById('smoke');
+            const micStatus = document.getElementById('mic-status');
+            
+            flame.style.opacity = '0';
+            flame.style.transform = 'scale(0)';
+            smoke.classList.add('active');
+            
+            if(micStatus.style.display === 'block') {
+                micStatus.innerHTML = "<i class='fa-solid fa-check'></i> Yayy! Harapanmu terbang ke awan ✨";
+            }
+
+            // EXTREMELY MASSIVE CONFETTI BARRAGE
+            let duration = 5000; // Tembakan konfeti beruntun selama 5 detik
+            let end = Date.now() + duration;
+
+            (function frame() {
+                // Tembakan Kiri
+                confetti({
+                    particleCount: 25,
+                    angle: 60,
+                    spread: 100,
+                    origin: { x: 0, y: Math.random() * 0.8 + 0.2 },
+                    colors: ['#b76e79', '#fadadd', '#d4af37', '#ffffff', '#ff69b4']
+                });
+                // Tembakan Kanan
+                confetti({
+                    particleCount: 25,
+                    angle: 120,
+                    spread: 100,
+                    origin: { x: 1, y: Math.random() * 0.8 + 0.2 },
+                    colors: ['#b76e79', '#fadadd', '#d4af37', '#ffffff', '#ff69b4']
+                });
+                // Tembakan Bawah Tengah
+                confetti({
+                    particleCount: 25,
+                    angle: 90,
+                    spread: 120,
+                    origin: { x: 0.5, y: 1 },
+                    colors: ['#b76e79', '#fadadd', '#d4af37', '#ffffff', '#ff69b4']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            // Pindah ke Stage 4 setelah konfeti agak mereda
+            setTimeout(() => {
+                switchStage('stage3', 'stage4');
+            }, 4500);
+        }
+
+        /* --- SURPRISE & CONFETTI LOGIC (Stage 4) --- */
+        function triggerConfettiSmall() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#b76e79', '#d4af37', '#ffffff']
+            });
+        }
+
+        /* --- SCRATCH CARD LOGIC (Stage 4) --- */
+        function initScratchCard() {
+            const canvas = document.getElementById('scratchpad');
+            const ctx = canvas.getContext('2d');
+            
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            // Gambar latar Gold
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#bf953f');
+            gradient.addColorStop(0.5, '#fcf6ba');
+            gradient.addColorStop(1, '#b38728');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Tambah Pattern/Teks di atas Gold
+            ctx.font = '600 18px Poppins';
+            ctx.fillStyle = '#7a5c13';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✨ GOSOK DI SINI ✨', canvas.width / 2, canvas.height / 2);
+
+            let isDrawing = false;
+            
+            // Setup Composite Operation untuk "Menghapus"
+            ctx.globalCompositeOperation = 'destination-out';
+
+            function getCoordinates(e) {
+                const bRect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - bRect.left,
+                    y: clientY - bRect.top
+                };
+            }
+
+            function scratch(x, y) {
+                ctx.beginPath();
+                ctx.arc(x, y, 22, 0, Math.PI * 2); // Radius gosokan 22px
+                ctx.fill();
+            }
+
+            // Mouse Events
+            canvas.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                const pos = getCoordinates(e);
+                scratch(pos.x, pos.y);
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDrawing) return;
+                const pos = getCoordinates(e);
+                scratch(pos.x, pos.y);
+            });
+            canvas.addEventListener('mouseup', () => isDrawing = false);
+            canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+            // Touch Events (Mobile)
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault(); 
+                isDrawing = true;
+                const pos = getCoordinates(e);
+                scratch(pos.x, pos.y);
+            }, { passive: false });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!isDrawing) return;
+                const pos = getCoordinates(e);
+                scratch(pos.x, pos.y);
+            }, { passive: false });
+            
+            canvas.addEventListener('touchend', () => isDrawing = false);
+        }
+    </script>
+</body>
+</html>
